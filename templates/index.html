@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocBrief - Smart Document Summarizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6a82fb, #fc5c7d);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        form {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        input[type="file"] {
+            font-size: 1.1rem;
+            padding: 12px 20px;
+            border-radius: 5px;
+            border: 2px solid #fc5c7d;
+            background-color: #fff;
+            color: #333;
+            width: 100%;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            border-color: #6a82fb;
+            box-shadow: 0 0 10px rgba(106, 130, 251, 0.5);
+        }
+
+        button {
+            padding: 12px 30px;
+            background-color: #6a82fb;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(106, 130, 251, 0.4);
+        }
+
+        button:hover {
+            background-color: #fc5c7d;
+            box-shadow: 0 4px 12px rgba(252, 92, 125, 0.5);
+        }
+
+        #summary {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            color: #333;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            min-height: 150px;
+            word-wrap: break-word;
+            animation: slideIn 1s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: bold;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>DocBrief - Summarize Your Documents</h1>
+    <form onsubmit="uploadAndSummarize(event)">
+        <input type="file" name="file" id="file" required>
+        <button type="submit">Summarize Document</button>
+    </form>
+
+    <div id="summary" style="display:none;">
+        <h2>Summary:</h2>
+        <p id="summaryText">Your summary will appear here after uploading the document.</p>
+    </div>
+
+    <div class="loading" id="loading">
+        <p>Processing your document... Please wait.</p>
+    </div>
+
+    <script>
+        async function uploadAndSummarize(event) {
+            event.preventDefault();  // Prevent form submission from refreshing the page
+            const fileInput = document.querySelector('input[type="file"]');
+            const loadingIndicator = document.getElementById('loading');
+            const summaryBox = document.getElementById('summary');
+            const summaryText = document.getElementById('summaryText');
+
+            // Show loading animation
+            loadingIndicator.classList.add('show');
+            summaryBox.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                loadingIndicator.classList.remove('show');
+                if (result.summary) {
+                    summaryBox.style.display = 'block';
+                    summaryText.innerText = result.summary;
+                } else if (result.error) {
+                    summaryText.innerText = "Error: " + result.error;
+                }
+            } catch (error) {
+                loadingIndicator.classList.remove('show');
+                summaryText.innerText = "An error occurred while summarizing the document.";
+            }
+        }
+    </script>
+</body>
+</html>
