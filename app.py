@@ -1,8 +1,9 @@
 import os
+import tempfile
 from dotenv import load_dotenv
 from flask import Flask, request, render_template, jsonify
 from services.document_processing import process_pdf
-from services.summary_generation import get_summary
+from services.summary_generation import get_answer_or_summary
 
 # Load environment variables from .env file
 load_dotenv()
@@ -28,16 +29,18 @@ def upload_file():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
+    # Get the query from the request (user input required)
+    query = request.form["query"]
+
     try:
         # Process the uploaded PDF and create the vector store
         vectorstore = process_pdf(file)
 
-        # Query the vector store for a document summary
-        query = "Give me the gist of the document in 3 sentences."
-        summary = get_summary(query, vectorstore)
+        # Use the user-provided query to generate the response
+        response = get_answer_or_summary(query, vectorstore)
 
-        # Return the summary as a JSON response
-        return jsonify({"summary": summary})
+        # Return the response as a JSON object
+        return jsonify({"response": response})
 
     except Exception as e:
         # Handle any errors and return them in the response
